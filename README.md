@@ -2,15 +2,16 @@
 `./compile_driver driver_path`
 
 # Intro
-While writing drivers, I notice that I keep
-making dumb mistakes like forgetting to put a dev_barrier or something. Also,
-I notice that for the most part, drivers are pretty simple control-flow wise.
-Many are just a series of memory reads and writes. This made me wonder if we could
-possible do more static analysis of drivers. So I wrote a Domain Specific Language
-for driver creation that compiles to C. The language has a few different statement types:
+When writing drivers, it is easy to
+make simple mistakes like forgetting to initialize certain registers that take forever to track down
+This is a DSL intended to help decrease this. At a high level, it tracks every read and write and ensures
+that all necessary dependencies have been written to before performing any action. 
+
+# Driver format
+The language has a few different statement types:
 
 - `varname := int;` will create a variable and set its value to be an integer literal
-- `varname := @addr;` will do the same but set its value to be the value at location addr
+- `varname := @addr;` will do the same but set its value to be the value at location `addr`
 - `varname[start:end] := int;` will set bits from start to end inclusive to the integer literal
 - `varname[start:end] := paramname;` will set bits from start to end inclusive to the param's value
 - `@addr <- var;` will write `var` to `addr`
@@ -58,6 +59,7 @@ uartinit() {
 }
 ```
 
+# Specification format
 In addition to the program, you can add a specification that verifies your program obeys certain properties.
 The specification is written in prolog. Knowledge of it is useful but not necessary to understand this. 
 Specification rules we can add are: 
@@ -76,4 +78,4 @@ Specification rules we can add are:
   - Note: read and writes don't necessarily have to read or write to memory. For example, we can designate a read to address 15(for example) as our dev_barrier instruction and design our rules that way. This is how we can incorporate arbitrary code that is often necessary for drivers.
 - must_sync is a list of addresses that must be fully written at the end of the driver
 
-A minimal example set of rules is shown [here](src/compiler/rules.pl) and an example driver for initializing UART on the raspberry pi is shown [here](test.d)
+A minimal example set of rules is shown [here](src/compiler/rules.pl)
