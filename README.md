@@ -3,9 +3,12 @@
 
 # Intro
 When writing drivers, it is easy to
-make simple mistakes like forgetting to initialize certain registers that take forever to track down
+make simple mistakes like forgetting to initialize certain registers that take forever to track down.
 This is a DSL intended to help decrease this. At a high level, it tracks every read and write and ensures
-that all necessary dependencies have been written to before performing any action. 
+that all necessary dependencies have been written to before performing any such action. 
+
+Users provide both a driver that contains the actual code for the driver and a specification for the compiler
+to check the driver against.
 
 # Driver format
 The language has a few different statement types:
@@ -65,7 +68,7 @@ The specification is written in prolog. Knowledge of it is useful but not necess
 Specification rules we can add are: 
 
 - `sync_rules`, a mapping from addresses to list of addresses
-  - The purpose of this is so we can keep track of all the addresses that have been fully/partially written so we never try to read from a partially written address. This stops the mistake of, for example, forgetting to put dev barriers and stuff.
+  - The purpose of this is so we can keep track of all the addresses that have been fully/partially written so we never try to read from a partially written address.
   - For example, the rule: `sync_rules(_, Addr, Synced) :- Addr is 15, range(0, 2000000, Synced).` roughly translates to "on writing to address 15, addresses 0 to 2000000 are fully written"
 - write_dependencies, a map from address to list of (address, start, end, bitarray) tuples
   - Add rules that ensure that certain values have been written to certain addresses. This is useful for, for example, making sure that you set the right gpio mode before turning on an LED
@@ -77,5 +80,7 @@ Specification rules we can add are:
 - read_instr is the same but an instruction for reading into the variable
   - Note: read and writes don't necessarily have to read or write to memory. For example, we can designate a read to address 15(for example) as our dev_barrier instruction and design our rules that way. This is how we can incorporate arbitrary code that is often necessary for drivers.
 - must_sync is a list of addresses that must be fully written at the end of the driver
+
+Compliance with all of the rules is done statically with the only dynamic checks being done when the user inserts a statement of the form `@addr[start:end] == val` 
 
 A minimal example set of rules is shown [here](src/compiler/rules.pl)
