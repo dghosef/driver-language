@@ -1,3 +1,6 @@
+# Usage:
+`./compile_driver driver_path`
+
 # Intro
 While writing drivers, I notice that I keep
 making dumb mistakes like forgetting to put a dev_barrier or something. Also,
@@ -13,8 +16,6 @@ for driver creation that compiles to C. The language has a few different stateme
 - `@addr <- var;` will write `var` to `addr`
 - `@addr[start:end] == val` will insert a *dynamic* check to see that the last write to addr in the bitrange [start, end] inclusive is equal to `val` and then for the purposes of static checking every statement will assume that the assertion is true. The purpose of this is because sometimes we need to make sure that previous function calls have left us in the correct state and it isn't possible to determine this @ compile time. 
 
-# Usage:
-`./compile_driver driver_path`
 
 The general form of a program in this language looks like:
 ```
